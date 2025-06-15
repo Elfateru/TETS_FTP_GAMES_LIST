@@ -4,9 +4,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from typing import Generator
+import config
 
-@pytest.fixture
-def driver():
+
+# @pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
+def driver() -> Generator[webdriver.Chrome, None, None]:
     """Фикстура для инициализации и закрытия WebDriver Chrome."""
     options = Options()
     options.add_argument("--headless") #Запуск браузера без GUI
@@ -17,9 +21,13 @@ def driver():
     yield driver
     driver.quit()
 
+@pytest.fixture(scope="session", autouse=True)
+def test_config() -> config.Config:
+    return config.get()
+
 # Хук для добавления скриншота в Allure при падении любого теста
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
+def pytest_runtest_makereport(item, call) -> None:
     """Хук для снятия скриншота при падении любого теста."""
     outcome = yield
     rep = outcome.get_result()

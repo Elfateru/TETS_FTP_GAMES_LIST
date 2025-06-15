@@ -4,18 +4,22 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
+import config
+
 
 @allure.feature("Display Count")
 @allure.story("Проверка отображения разного количества карточек на странице")
 @pytest.mark.parametrize("count", [10, 20, 50, 100])
-def test_display_count(driver, count):
-    url = "https://makarovartem.github.io/frontend-avito-tech-test-assignment"
+def test_display_count(driver: webdriver.Chrome, count: int, test_config: config.Config) -> None:
+    url = test_config.srv.URL
+    parent_selector = test_config.display_cards.PARENT_SELECTOR
     driver.get(url)
     wait = WebDriverWait(driver, 10)
 
     with allure.step("Считаем карточки на первой странице (дефолтное количество)"):
         cards_before = wait.until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "ul.ant-list-items > li"))
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, parent_selector))
         )
         default_count = len(cards_before)
 
@@ -36,10 +40,10 @@ def test_display_count(driver, count):
                 break
 
     with allure.step("Дожидаемся изменения числа карточек на странице"):
-        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "ul.ant-list-items > li")) != default_count or count == 10)
+        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, parent_selector)) != default_count or count == 10)
 
     with allure.step("Проверяем итоговое количество карточек"):
-        cards_after = driver.find_elements(By.CSS_SELECTOR, "ul.ant-list-items > li")
+        cards_after = driver.find_elements(By.CSS_SELECTOR, parent_selector)
         assert len(cards_after) <= count, (
             f"Ожидалось не больше {count} карточек, найдено {len(cards_after)}"
         )
